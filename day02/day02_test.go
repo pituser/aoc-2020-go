@@ -36,17 +36,17 @@ func TestCheckPassword(t *testing.T) {
 	for _, test := range tests {
 		inputLines = append(inputLines, test.input)
 	}
-	passwordSpecs := parsePasswordSpecs(inputLines)
+	passwords := parsePasswordLines(inputLines)
 
 	for i, test := range tests {
 		t.Run("checkPassword1", func(t *testing.T) {
-			got := checkPassword1(passwordSpecs[i])
+			got := checkPasswordPart1(passwords[i])
 			if got != test.isCorrect1 {
 				t.Errorf("got %v want %v", got, test.isCorrect1)
 			}
 		})
 		t.Run("checkPassword2", func(t *testing.T) {
-			got := checkPassword2(passwordSpecs[i])
+			got := checkPasswordPart2(passwords[i])
 			if got != test.isCorrect2 {
 				t.Errorf("got %v want %v", got, test.isCorrect2)
 			}

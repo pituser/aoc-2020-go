@@ -2,79 +2,85 @@ package main
 
 import (
 	"aoc2020/util"
+	"bytes"
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 const (
 	day = 2
 )
 
-type passwordSpec struct {
-	first, second int
-	char          string
-	password      string
+type passwordWithPolicy struct {
+	policy1, policy2 int
+	letter           byte
+	password         []byte
 }
 
-func readPuzzleInput() []passwordSpec {
+func readPuzzleInput() []passwordWithPolicy {
 	input, err := util.ReadLinesFromFile("input.txt")
-	if err != nil {
-		log.Fatalf("error reading input file: %q", err)
-	}
-	return parsePasswordSpecs(input)
+	util.CheckError(err, "error reading puzzle input file")
+
+	return parsePasswordLines(input)
 }
 
-func parsePasswordSpecs(lines []string) []passwordSpec {
-	var passwordSpecs []passwordSpec
-	re, _ := regexp.Compile(`(\d+)-(\d+) (\w): (\w+)`)
+func parsePasswordLines(lines []string) []passwordWithPolicy {
+	var passwordsWithPolicy []passwordWithPolicy
+	re, err := regexp.Compile(`(\d+)-(\d+) (\w): (\w+)`)
+	util.CheckError(err, "error compiling regexp")
 
 	for _, line := range lines {
-		var spec passwordSpec
 		parts := re.FindStringSubmatch(line)
-		spec.first, _ = strconv.Atoi(parts[1])
-		spec.second, _ = strconv.Atoi(parts[2])
-		spec.char = parts[3]
-		spec.password = parts[4]
-		passwordSpecs = append(passwordSpecs, spec)
+		p1, err := strconv.Atoi(parts[1])
+		util.CheckError(err, "error parsing int")
+		p2, err := strconv.Atoi(parts[2])
+		util.CheckError(err, "error parsing int")
+
+		spec := passwordWithPolicy{
+			policy1:  p1,
+			policy2:  p2,
+			letter:   (parts[3])[0], // by definition of the regexp this is only one byte
+			password: []byte(parts[4]),
+		}
+
+		passwordsWithPolicy = append(passwordsWithPolicy, spec)
 	}
-	return passwordSpecs
+	return passwordsWithPolicy
 }
 
-func checkPassword1(spec passwordSpec) bool {
-	cnt := strings.Count(spec.password, spec.char)
-	return cnt >= spec.first && cnt <= spec.second
+func checkPasswordPart1(spec passwordWithPolicy) bool {
+	cnt := bytes.Count(spec.password, []byte{spec.letter})
+	return cnt >= spec.policy1 && cnt <= spec.policy2
 }
 
-func checkPassword2(spec passwordSpec) bool {
-	return (spec.password[spec.first-1] == spec.char[0]) != (spec.password[spec.second-1] == spec.char[0])
+func checkPasswordPart2(spec passwordWithPolicy) bool {
+	return (spec.password[spec.policy1-1] == spec.letter) != (spec.password[spec.policy2-1] == spec.letter)
 }
 
-func countCorrectPasswords(specs []passwordSpec, checker func(passwordSpec) bool) int {
-	correctPasswords := 0
+func countCorrectPasswords(specs []passwordWithPolicy, checker func(passwordWithPolicy) bool) int {
+	correctPasswordsCnt := 0
 	for _, spec := range specs {
 		if checker(spec) {
-			correctPasswords++
+			correctPasswordsCnt++
 		}
 	}
-	return correctPasswords
+	return correctPasswordsCnt
 }
 
-func solvePartOne(specs []passwordSpec) int {
-	return countCorrectPasswords(specs, checkPassword1)
+func solvePartOne(passwordsWithPolicy []passwordWithPolicy) int {
+	return countCorrectPasswords(passwordsWithPolicy, checkPasswordPart1)
 }
 
-func solvePartTwo(specs []passwordSpec) int {
-	return countCorrectPasswords(specs, checkPassword2)
+func solvePartTwo(passwordsWithPolicy []passwordWithPolicy) int {
+	return countCorrectPasswords(passwordsWithPolicy, checkPasswordPart2)
 }
 
 func main() {
 	fmt.Println("Advent of Code 2020 - Day ", day)
 
-	passwordSpecs := readPuzzleInput()
+	passwordsWithPolicy := readPuzzleInput()
 
-	fmt.Println("Part One: ", solvePartOne(passwordSpecs))
-	fmt.Println("Part Two: ", solvePartTwo(passwordSpecs))
+	fmt.Println("Part One: ", solvePartOne(passwordsWithPolicy))
+	fmt.Println("Part Two: ", solvePartTwo(passwordsWithPolicy))
 }

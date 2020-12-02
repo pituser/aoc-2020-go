@@ -3,7 +3,6 @@ package main
 import (
 	"aoc2020/util"
 	"fmt"
-	"log"
 
 	"github.com/ernestosuarez/itertools"
 )
@@ -14,13 +13,9 @@ const (
 
 func readPuzzleInput() []int {
 	input, err := util.ReadLinesFromFile("input.txt")
-	if err != nil {
-		log.Fatalf("error reading input file: %q", err)
-	}
+	util.CheckError(err, "error reading input file")
 	expenses, err := util.ParseIntList(input)
-	if err != nil {
-		log.Fatalf("error parsing input file: %q", err)
-	}
+	util.CheckError(err, "error parsing input file")
 	return expenses
 }
 
