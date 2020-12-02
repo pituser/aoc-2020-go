@@ -1,10 +1,10 @@
 package main
 
 import (
-	"aoc2020/util"
 	"fmt"
 
 	"github.com/ernestosuarez/itertools"
+	"github.com/pituser/aoc-2020-go/util"
 )
 
 const (

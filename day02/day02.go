@@ -1,11 +1,12 @@
 package main
 
 import (
-	"aoc2020/util"
 	"bytes"
 	"fmt"
 	"regexp"
 	"strconv"
+
+	"github.com/pituser/aoc-2020-go/util"
 )
 
 const (
