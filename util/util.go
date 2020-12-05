@@ -12,6 +12,14 @@ func CheckError(err error, msg string) {
 	}
 }
 
+func Error(msg string) {
+	if msg == "" {
+		msg = "unexpected error"
+	}
+	log.Fatalf("%v", msg)
+
+}
+
 func ReduceInt(list []int, init int, reducer func(int, int) int) int {
 	res := init
 	for _, i := range list {
