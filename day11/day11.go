@@ -44,157 +44,31 @@ func readPuzzleInput() [][]int {
 	return seats
 }
 
-func printSeats(seats [][]int) {
-	for i := 0; i < len(seats); i++ {
-		for j := 0; j < len(seats[0]); j++ {
-			switch seats[i][j] {
-			case Floor:
-				fmt.Print(".")
-			case Empty:
-				fmt.Print("L")
-			case Occ:
-				fmt.Print("#")
-			}
-		}
-		fmt.Println()
-	}
-	fmt.Println()
-}
-
-func countAdjacentOccupied(seats [][]int, row, col int) (numOcc int) {
+func countOccupied(seats [][]int, row, col int, dist int) int {
 	h, w := len(seats), len(seats[0])
+	numOcc := 0
+	dir := [3]int{-1, 0, 1}
 
-	if row > 0 {
-		if seats[row-1][col] == Occ {
-			numOcc++
-		}
-		if col > 0 {
-			if seats[row-1][col-1] == Occ {
-				numOcc++
+	for _, dirY := range dir {
+		for _, dirX := range dir {
+			if !(dirX == 0 && dirY == 0) {
+				for i, j, d := row+dirX, col+dirY, 0; i >= 0 && i < h && j >= 0 && j < w && d < dist; i, j, d = i+dirX, j+dirY, d+1 {
+					if seats[i][j] == Occ {
+						numOcc++
+						break
+					}
+					if seats[i][j] == Empty {
+						break
+					}
+				}
 			}
-		}
-		if col < w-1 {
-			if seats[row-1][col+1] == Occ {
-				numOcc++
-			}
-		}
-	}
-	if row < h-1 {
-		if seats[row+1][col] == Occ {
-			numOcc++
-		}
-		if col > 0 {
-			if seats[row+1][col-1] == Occ {
-				numOcc++
-			}
-		}
-		if col < w-1 {
-			if seats[row+1][col+1] == Occ {
-				numOcc++
-			}
-		}
-	}
-	if col > 0 {
-		if seats[row][col-1] == Occ {
-			numOcc++
-		}
-	}
-	if col < w-1 {
-		if seats[row][col+1] == Occ {
-			numOcc++
-		}
-	}
-	return numOcc
-}
-
-func countVisibleOccupied(seats [][]int, row, col int) (numOcc int) {
-	h, w := len(seats), len(seats[0])
-
-	// left up
-	for i, j := row-1, col-1; i >= 0 && j >= 0; i, j = i-1, j-1 {
-		if seats[i][j] == Occ {
-			numOcc++
-			break
-		}
-		if seats[i][j] == Empty {
-			break
-		}
-	}
-	// up
-	for i := row - 1; i >= 0; i = i - 1 {
-		if seats[i][col] == Occ {
-			numOcc++
-			break
-		}
-		if seats[i][col] == Empty {
-			break
-		}
-	}
-	// right up
-	for i, j := row-1, col+1; i >= 0 && j < w; i, j = i-1, j+1 {
-		if seats[i][j] == Occ {
-			numOcc++
-			break
-		}
-		if seats[i][j] == Empty {
-			break
-		}
-	}
-	// left
-	for j := col - 1; j >= 0; j = j - 1 {
-		if seats[row][j] == Occ {
-			numOcc++
-			break
-		}
-		if seats[row][j] == Empty {
-			break
-		}
-	}
-	// right
-	for j := col + 1; j < w; j = j + 1 {
-		if seats[row][j] == Occ {
-			numOcc++
-			break
-		}
-		if seats[row][j] == Empty {
-			break
-		}
-	}
-	// left down
-	for i, j := row+1, col-1; i < h && j >= 0; i, j = i+1, j-1 {
-		if seats[i][j] == Occ {
-			numOcc++
-			break
-		}
-		if seats[i][j] == Empty {
-			break
-		}
-	}
-	// down
-	for i := row + 1; i < h; i = i + 1 {
-		if seats[i][col] == Occ {
-			numOcc++
-			break
-		}
-		if seats[i][col] == Empty {
-			break
-		}
-	}
-	// right down
-	for i, j := row+1, col+1; i < h && j < w; i, j = i+1, j+1 {
-		if seats[i][j] == Occ {
-			numOcc++
-			break
-		}
-		if seats[i][j] == Empty {
-			break
 		}
 	}
 
 	return numOcc
 }
 
-func simulateStep(seats [][]int, occCounter func([][]int, int, int) int, maxOcc int) (occupiedSeats int) {
+func simulateStep(seats [][]int, maxDist int, maxOcc int) (occupiedSeats int) {
 	newSeats := make([][]int, len(seats))
 	for i := 0; i < len(seats); i++ {
 		newSeats[i] = make([]int, len(seats[0]))
@@ -205,7 +79,7 @@ func simulateStep(seats [][]int, occCounter func([][]int, int, int) int, maxOcc 
 			if pos == Floor {
 				newSeats[i][j] = Floor
 			} else {
-				numOcc := occCounter(seats, i, j)
+				numOcc := countOccupied(seats, i, j, maxDist)
 				if pos == Empty {
 					if numOcc == 0 {
 						newSeats[i][j] = Occ
@@ -236,8 +110,7 @@ func solvePartOne(seats [][]int) int {
 	changed := true
 	occupiedSeats := 0
 	for changed {
-		newOcc := simulateStep(seats, countAdjacentOccupied, 4)
-		//fmt.Println(seats)
+		newOcc := simulateStep(seats, 1, 4)
 		if newOcc == occupiedSeats {
 			changed = false
 		}
@@ -249,9 +122,9 @@ func solvePartOne(seats [][]int) int {
 func solvePartTwo(seats [][]int) int {
 	changed := true
 	occupiedSeats := 0
+	maxDist := util.MaxInt([]int{len(seats), len(seats[0])})
 	for changed {
-		newOcc := simulateStep(seats, countVisibleOccupied, 5)
-		//printSeats(seats)
+		newOcc := simulateStep(seats, maxDist, 5)
 		if newOcc == occupiedSeats {
 			changed = false
 		}
@@ -263,13 +136,9 @@ func solvePartTwo(seats [][]int) int {
 func main() {
 	fmt.Println("Advent of Code 2020 - Day ", day)
 
-	/*
-		input := readPuzzleInput()
-		printSeats(input)
-		fmt.Println("Part One: ", solvePartOne(input))
-	*/
-
 	input := readPuzzleInput()
-	printSeats(input)
+	fmt.Println("Part One: ", solvePartOne(input))
+
+	input = readPuzzleInput()
 	fmt.Println("Part Two: ", solvePartTwo(input))
 }
